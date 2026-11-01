@@ -46,6 +46,20 @@ echo "[3] Учётные записи"
 
 awk -F: '$3>=1000 && $3<65534 {printf " %s (uid=%s)\n",$1,$3}' /etc/passwd
 
+echo "[4] Веб-сервер"
+
+check "Служба Nginx активна" \
+    "active" "$(systemctl is-active nginx)"
+
+check "Конфигурация Nginx корректна" \
+    "valid" "$(sudo nginx -t >/dev/null 2>&1 && echo valid || echo invalid)"
+
+check "Сертификат действителен ещё минимум 30 дней" \
+    "valid" "$(sudo openssl x509 -in /etc/ssl/certs/devops.crt -checkend 2592000 >/dev/null 2>&1 && echo valid || echo invalid)"
+
+check "Права файлов сайта и приватного ключа безопасны" \
+    "secure" "$(if [[ -z "$(find /var/www/devops-site -perm -o+w -print -quit)" ]] && [[ "$(sudo stat -c '%a' /etc/ssl/private/devops.key)" == "600" ]]; then echo secure; else echo insecure; fi)"
+
 echo "Пройдено: $PASS, не пройдено: $FAIL"
 
 [[ $FAIL -eq 0 ]] && exit 0 || exit 1

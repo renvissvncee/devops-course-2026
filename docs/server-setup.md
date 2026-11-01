@@ -46,3 +46,42 @@ Host devops
     User devops
     IdentityFile ~/.ssh/devops_vm
     IdentitiesOnly yes
+```
+
+## 8. Веб-сервер
+
+### Установленный пакет
+
+- Веб-сервер: Nginx 1.24.0.
+- Установка: `sudo apt install nginx`.
+
+### Конфигурация ресурса
+
+- Файл конфигурации: `/etc/nginx/sites-available/devops-site`.
+- Активная конфигурация: `/etc/nginx/sites-enabled/devops-site`.
+- Каталог ресурса: `/var/www/devops-site`.
+- Владелец каталога: `devops:devops`.
+- Права каталога: `755`.
+- Права HTML-файлов: `644`.
+
+### TLS-сертификат
+
+- Сертификат: `/etc/ssl/certs/devops.crt`.
+- Владелец сертификата: `root:root`.
+- Права сертификата: `644`.
+- Приватный ключ: `/etc/ssl/private/devops.key`.
+- Владелец ключа: `root:root`.
+- Права приватного ключа: `600`.
+- Тип сертификата: самоподписанный, RSA 2048 бит.
+- Имя сертификата: `devops.local`.
+- Срок действия: 365 дней (с 27.10.2026 по 27.10.2027).
+
+### Команда формирования сертификата
+
+```bash
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/private/devops.key \
+    -out /etc/ssl/certs/devops.crt \
+    -subj "/CN=devops.local" \
+    -addext "subjectAltName=DNS:devops.local"
+```
