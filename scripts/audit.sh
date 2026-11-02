@@ -59,7 +59,22 @@ check "Сертификат действителен ещё минимум 30 д
 
 check "Права файлов сайта и приватного ключа безопасны" \
     "secure" "$(if [[ -z "$(find /var/www/devops-site -perm -o+w -print -quit)" ]] && [[ "$(sudo stat -c '%a' /etc/ssl/private/devops.key)" == "600" ]]; then echo secure; else echo insecure; fi)"
+echo "[5] Контейнеризация"
 
+check "Служба Docker активна" \
+    "active" "$(systemctl is-active docker)"
+
+check "Контейнер PostgreSQL находится в состоянии healthy" \
+    "healthy" "$(docker inspect -f '{{.State.Health.Status}}' app-db-1)"
+
+check "Порты 5000 и 5432 опубликованы только на localhost" \
+    "secure" "$(ss -tln | awk '
+        $4 ~ /:(5000|5432)$/ && $4 !~ /^127\.0\.0\.1:/ {bad=1}
+        END {print (bad ? "insecure" : "secure")}
+    ')"
+
+check "Права файла .env равны 600" \
+    "600" "$(stat -c '%a' "$HOME/app/.env")"
 echo "Пройдено: $PASS, не пройдено: $FAIL"
 
 [[ $FAIL -eq 0 ]] && exit 0 || exit 1

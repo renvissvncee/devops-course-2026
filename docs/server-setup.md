@@ -85,3 +85,56 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -subj "/CN=devops.local" \
     -addext "subjectAltName=DNS:devops.local"
 ```
+
+## 9. Контейнеризация
+
+### Docker Engine и Docker Compose
+
+- Способ установки: официальный APT-репозиторий Docker.
+- Docker Engine: 29.9.2.
+- Docker Compose: 5.6.1.
+- Пользователь для работы с Docker: `devops`.
+- Пользователь `devops` включён в группу `docker`.
+
+### Расположение проекта
+
+- Каталог проекта на сервере: `/home/devops/app`.
+- Dockerfile: `/home/devops/app/Dockerfile`.
+- Файл Docker Compose: `/home/devops/app/docker-compose.yml`.
+- Файл зависимостей: `/home/devops/app/requirements.txt`.
+- Образ приложения: `devops-app:1.0`.
+- Образ базы данных: `postgres:16-alpine`.
+
+### Переменные окружения
+
+- Файл с переменными окружения: `/home/devops/app/.env`.
+- Шаблон переменных окружения: `/home/devops/app/.env.example`.
+- Владелец файла `.env`: `devops:devops`.
+- Права файла `.env`: `600`.
+- Файл `.env` исключён из Git с помощью `.gitignore`.
+- Файл `.env` содержит параметры подключения приложения к PostgreSQL и пароль базы данных.
+
+### Публикуемые порты
+
+- Flask-приложение: `127.0.0.1:5000:5000`.
+- PostgreSQL: порт `5432` доступен только внутри Docker-сети и не опубликован на хосте.
+- Прямой доступ к Flask через внешние сетевые интерфейсы VM ограничен привязкой к `127.0.0.1`.
+
+### Хранение данных и сеть
+
+- Именованный Docker volume: `app_db_data`.
+- Назначение volume: постоянное хранение данных PostgreSQL.
+- Docker-сеть: `app_backend`.
+- Тип сети: `bridge`.
+- Взаимодействие приложения с базой данных осуществляется по имени сервиса `db` через внутренний DNS Docker.
+
+### Обратный прокси-сервер
+
+- Веб-сервер: Nginx 1.24.0.
+- Файл конфигурации: `/etc/nginx/sites-available/devops-site`.
+- HTTPS-домен: `devops.local`.
+- Порт HTTPS: `443`.
+- Расположение приложения: `/app/`.
+- Адрес upstream: `http://127.0.0.1:5000/`.
+- Nginx выполняет обратное проксирование запросов к Flask-приложению.
+- Существующий статический ресурс на `/` сохранён.
