@@ -1,0 +1,6 @@
+---
+app_image: "ghcr.io/renvissvncee/devops-ci-app"
+app_tag: "88b18f70f7f0a8f521bd40702d169d0db8f47a2c"
+app_container_name: "devops-ci-app"
+app_host_port: 5000
+app_internal_port: 5000
